@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import data from '../data/data.json';
 
-// Import topic images (make sure these exist in your assets)
+// Import topic images
 import reactImage from '../assets/react.png';
 import javascriptImage from '../assets/javascript.png';
 import cppImage from '../assets/cpp.png';
@@ -14,6 +14,7 @@ import cybersecurityImage from '../assets/cybersecurity.png';
 const Quizes = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   
   // Map topic names to their images
   const topicImages = {
@@ -26,91 +27,182 @@ const Quizes = () => {
     "Cyber Security": cybersecurityImage
   };
 
-  // Function to handle quiz start using topic name
+  // Categories for filtering
+  const categories = ['All', 'Programming', 'Computer Science', 'Security'];
+
+  // Topic to category mapping
+  const topicCategories = {
+    "React": "Programming",
+    "JavaScript": "Programming",
+    "C++": "Programming",
+    "OOPs": "Computer Science",
+    "DBMS": "Computer Science",
+    "OS": "Computer Science",
+    "Cyber Security": "Security"
+  };
+
+  // Function to handle quiz start
   const handleStartQuiz = (topicName) => {
     navigate(`/quiz/${topicName}`);
   };
 
-  // Create an array of topics with their names
+  // Create an array of topics with their details
   const allTopics = Object.keys(data.quizzes).map((topicName) => {
     return {
       name: topicName,
       count: data.quizzes[topicName].length,
       image: topicImages[topicName],
+      category: topicCategories[topicName] || 'Other'
     };
   });
 
-  // Filter topics based on search term
-  const filteredTopics = allTopics.filter(topic =>
-    topic.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter topics based on search term and selected category
+  const filteredTopics = allTopics.filter(topic => {
+    const matchesSearch = topic.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || topic.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Sort topics alphabetically
+  const sortedTopics = [...filteredTopics].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">Choose a Quiz Topic</h1>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Explore Our Quizzes</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Test your knowledge and learn something new with our collection of interactive quizzes.
+          </p>
+        </div>
         
-        {/* Search Bar */}
-        <div className="max-w-md mx-auto mb-12">
-          <div className="relative flex items-center">
+        {/* Search and Filter Section */}
+        <div className="max-w-4xl mx-auto mb-12 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
             <input
               type="text"
-              placeholder="Search quizzes..."
-              className="w-full py-3 px-4 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Search quizzes by topic..."
+              className="block w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <svg
-              className="absolute right-3 h-5 w-5 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clipRule="evenodd"
-              />
-            </svg>
+          </div>
+          
+          {/* Category Filter */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === category
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </div>
 
-        {filteredTopics.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-xl text-gray-600">No quizzes found matching your search.</p>
+        {/* Results Section */}
+        {sortedTopics.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl shadow-sm max-w-2xl mx-auto">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">No quizzes found</h3>
+            <p className="mt-1 text-gray-500">
+              {searchTerm 
+                ? `No quizzes match "${searchTerm}" in ${selectedCategory} category`
+                : `No quizzes available in ${selectedCategory} category`}
+            </p>
+            <div className="mt-6">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('All');
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Clear filters
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredTopics.map((topic) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedTopics.map((topic) => (
               <div 
                 key={topic.name} 
-                className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-xl flex flex-col h-full"
+                className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full border border-gray-100"
               >
-                <div className="h-48 w-full overflow-hidden flex items-center justify-center bg-gray-200 p-4">
+                <div className="h-48 w-full overflow-hidden relative bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center p-4">
+                  <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm text-xs font-medium px-2 py-1 rounded-full text-gray-700">
+                    {topic.category}
+                  </div>
                   <img 
                     src={topic.image} 
                     alt={topic.name} 
-                    className="object-contain h-full w-full"
+                    className="object-contain h-32 w-32"
                     onError={(e) => {
                       e.target.onerror = null; 
                       e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
                     }}
                   />
                 </div>
-                <div className="p-6 flex flex-col flex-grow">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">{topic.name}</h2>
-                  <p className="text-gray-600 mb-4">{topic.count} {topic.count === 1 ? 'quiz' : 'quizzes'} available</p>
-                  <div className="mt-auto">
-                    <button
-                      onClick={() => handleStartQuiz(topic.name)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 text-center"
-                    >
-                      Start Quiz
-                    </button>
+                <div className="p-5 flex flex-col flex-grow">
+                  <div className="flex-grow">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">{topic.name}</h2>
+                    <p className="text-gray-600 text-sm mb-4">
+                      {topic.count} {topic.count === 1 ? 'question set' : 'question sets'} available
+                    </p>
                   </div>
+                  <button
+                    onClick={() => handleStartQuiz(topic.name)}
+                    className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-300 text-center flex items-center justify-center"
+                  >
+                    Start Quiz
+                    <svg className="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Stats Section */}
+        {sortedTopics.length > 0 && (
+          <div className="mt-12 bg-white rounded-xl shadow-sm p-6 max-w-4xl mx-auto">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Quiz Collection Stats</h3>
+              <div className="flex flex-wrap justify-center gap-6">
+                <div className="px-4 py-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">Total Topics</p>
+                  <p className="text-2xl font-bold text-blue-600">{allTopics.length}</p>
+                </div>
+                <div className="px-4 py-3 bg-green-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">Total Questions</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {allTopics.reduce((sum, topic) => sum + topic.count, 0)}
+                  </p>
+                </div>
+                <div className="px-4 py-3 bg-purple-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">Showing</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {sortedTopics.length} {sortedTopics.length === 1 ? 'topic' : 'topics'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
