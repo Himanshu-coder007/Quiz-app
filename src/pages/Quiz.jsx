@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/pages/Quiz.jsx
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import data from '../data/data.json';
 
@@ -11,10 +12,35 @@ const Quiz = () => {
   const [showResult, setShowResult] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
+  const [startTime, setStartTime] = useState(null);
+  const [timeTaken, setTimeTaken] = useState(0);
 
   // Get the questions for the specific topic
   const questions = data.quizzes[topicName] || [];
   const totalQuestions = questions.length;
+
+  useEffect(() => {
+    // Set start time when component mounts
+    setStartTime(new Date());
+    
+    // Load any saved progress from localStorage
+    const savedProgress = JSON.parse(localStorage.getItem(`quizProgress_${topicName}`));
+    if (savedProgress) {
+      setCurrentQuestionIndex(savedProgress.currentQuestionIndex);
+      setSelectedOptions(savedProgress.selectedOptions);
+      setScore(savedProgress.score);
+      setAnsweredQuestions(new Set(savedProgress.answeredQuestions));
+    }
+  }, [topicName]);
+
+  const saveProgress = () => {
+    localStorage.setItem(`quizProgress_${topicName}`, JSON.stringify({
+      currentQuestionIndex,
+      selectedOptions,
+      score,
+      answeredQuestions: Array.from(answeredQuestions)
+    }));
+  };
 
   const handleOptionSelect = (questionId, option) => {
     const currentQuestion = questions.find(q => q.id === questionId);
@@ -46,23 +72,49 @@ const Quiz = () => {
     
     // Mark question as answered (or update if already answered)
     setAnsweredQuestions(prev => new Set(prev).add(questionId));
+    saveProgress();
   };
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      saveProgress();
     }
   };
 
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
+      saveProgress();
     }
   };
 
   const handleSubmit = () => {
+    const endTime = new Date();
+    const timeDiff = (endTime - startTime) / 1000; // in seconds
+    setTimeTaken(timeDiff);
     setShowResult(true);
     setQuizCompleted(true);
+    
+    // Save quiz results to history
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser) {
+      const quizHistory = JSON.parse(localStorage.getItem('quizHistory')) || [];
+      const newQuizResult = {
+        username: currentUser.username,
+        topic: topicName,
+        score: score,
+        totalQuestions: totalQuestions,
+        percentage: Math.round((score / totalQuestions) * 100),
+        timeTaken: timeDiff,
+        date: new Date().toISOString()
+      };
+      
+      localStorage.setItem('quizHistory', JSON.stringify([...quizHistory, newQuizResult]));
+    }
+    
+    // Clear saved progress
+    localStorage.removeItem(`quizProgress_${topicName}`);
   };
 
   if (questions.length === 0) {
@@ -88,6 +140,12 @@ const Quiz = () => {
   const passed = percentage >= 70;
   const isAnswered = answeredQuestions.has(currentQuestion.id);
   const selectedOption = selectedOptions[currentQuestion.id];
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}m ${secs}s`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -212,6 +270,9 @@ const Quiz = () => {
               <p className="text-lg text-gray-600 mb-1">
                 You scored <span className="font-bold">{score}</span> out of <span className="font-bold">{totalQuestions}</span>
               </p>
+              <p className="text-lg text-gray-600 mb-1">
+                Time taken: <span className="font-bold">{formatTime(timeTaken)}</span>
+              </p>
               <p className={`text-xl font-bold mb-6 ${passed ? 'text-green-600' : 'text-red-600'}`}>
                 {Math.round(percentage)}% {passed ? 'Passed' : 'Failed'}
               </p>
@@ -232,6 +293,7 @@ const Quiz = () => {
                     setShowResult(false);
                     setQuizCompleted(false);
                     setAnsweredQuestions(new Set());
+                    setStartTime(new Date());
                   }}
                   className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                 >
