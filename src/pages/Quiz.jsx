@@ -80,6 +80,8 @@ const Quiz = () => {
   const currentQuestion = quizData.questions[currentQuestionIndex];
   const totalQuestions = quizData.questions.length;
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
+  const percentage = (score / totalQuestions) * 100;
+  const passed = percentage >= 70;
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -166,11 +168,24 @@ const Quiz = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-2xl font-bold mb-4">Quiz Results</h2>
             <div className="mb-6">
+              {passed ? (
+                <div className="mb-4">
+                  <p className="text-lg font-bold text-green-600">Congratulations! 🎉</p>
+                  <p className="text-lg">You have passed the test!</p>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <p className="text-lg font-bold text-red-600">Sorry! 😔</p>
+                  <p className="text-lg">You have failed the test. Try again!</p>
+                </div>
+              )}
               <p className="text-lg">
                 You scored <span className="font-bold">{score}</span> out of <span className="font-bold">{totalQuestions}</span>
               </p>
               <p className="text-lg mt-2">
-                Percentage: <span className="font-bold">{Math.round((score / totalQuestions) * 100)}%</span>
+                Percentage: <span className={`font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.round(percentage)}%
+                </span>
               </p>
             </div>
             <div className="flex justify-end">
