@@ -28,25 +28,34 @@ const Quiz = () => {
   }, [timeLeft, quizCompleted]);
 
   const handleOptionSelect = (questionId, option) => {
-    if (answeredQuestions.has(questionId)) return;
+    const currentQuestion = questions.find(q => q.id === questionId);
+    const wasPreviouslyAnswered = answeredQuestions.has(questionId);
+    const previousSelection = selectedOptions[questionId];
     
+    // Update selected option
     const newSelectedOptions = {
       ...selectedOptions,
       [questionId]: option
     };
-    
     setSelectedOptions(newSelectedOptions);
     
-    // Check if answer is correct
-    const currentQuestion = questions.find(q => q.id === questionId);
-    const correct = option === currentQuestion.answer;
-    
-    // Update score immediately if correct
-    if (correct) {
+    // If this question was previously answered
+    if (wasPreviouslyAnswered) {
+      // If the previous selection was correct and the new one isn't, decrease score
+      if (previousSelection === currentQuestion.answer && option !== currentQuestion.answer) {
+        setScore(prev => prev - 1);
+      } 
+      // If the previous selection was incorrect and the new one is correct, increase score
+      else if (previousSelection !== currentQuestion.answer && option === currentQuestion.answer) {
+        setScore(prev => prev + 1);
+      }
+    } 
+    // If this question wasn't previously answered and the new selection is correct
+    else if (option === currentQuestion.answer) {
       setScore(prev => prev + 1);
     }
     
-    // Mark question as answered
+    // Mark question as answered (or update if already answered)
     setAnsweredQuestions(prev => new Set(prev).add(questionId));
   };
 
@@ -95,7 +104,7 @@ const Quiz = () => {
   const percentage = (score / totalQuestions) * 100;
   const passed = percentage >= 70;
   const isAnswered = answeredQuestions.has(currentQuestion.id);
-  const correctAnswer = currentQuestion.answer;
+  const selectedOption = selectedOptions[currentQuestion.id];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -120,9 +129,11 @@ const Quiz = () => {
             <span className="text-sm font-medium text-gray-600">
               Question {currentQuestionIndex + 1} of {totalQuestions}
             </span>
-            <span className="text-sm font-medium text-gray-600">
-              Score: {score} / {totalQuestions}
-            </span>
+            {showResult && (
+              <span className="text-sm font-medium text-gray-600">
+                Score: {score} / {totalQuestions}
+              </span>
+            )}
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
             <div 
@@ -137,7 +148,7 @@ const Quiz = () => {
           <h2 className="text-xl font-semibold mb-6 text-gray-800">{currentQuestion.question}</h2>
           <div className="space-y-3 mb-8">
             {currentQuestion.options.map((option, index) => {
-              const isSelected = selectedOptions[currentQuestion.id] === option;
+              const isSelected = selectedOption === option;
               let optionClasses = "p-4 border rounded-lg cursor-pointer transition-all";
               
               optionClasses += isSelected 
@@ -148,7 +159,7 @@ const Quiz = () => {
                 <div 
                   key={index}
                   className={optionClasses}
-                  onClick={() => !isAnswered && handleOptionSelect(currentQuestion.id, option)}
+                  onClick={() => handleOptionSelect(currentQuestion.id, option)}
                 >
                   <div className="flex items-center">
                     <span className="mr-3 font-medium text-gray-700">{String.fromCharCode(65 + index)}.</span>
