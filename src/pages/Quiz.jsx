@@ -14,6 +14,8 @@ const Quiz = () => {
   const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
   const [startTime, setStartTime] = useState(null);
   const [timeTaken, setTimeTaken] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [timerActive, setTimerActive] = useState(true);
 
   // Get the questions for the specific topic
   const questions = data.quizzes[topicName] || [];
@@ -31,7 +33,60 @@ const Quiz = () => {
       setScore(savedProgress.score);
       setAnsweredQuestions(new Set(savedProgress.answeredQuestions));
     }
+    
+    // Start the timer for the first question
+    startQuestionTimer();
+    
+    return () => {
+      // Clean up timer when component unmounts
+      clearTimer();
+    };
   }, [topicName]);
+
+  useEffect(() => {
+    // Reset timer when question changes
+    if (timerActive) {
+      setTimeLeft(30);
+      startQuestionTimer();
+    }
+  }, [currentQuestionIndex]);
+
+  const clearTimer = () => {
+    if (window.questionTimer) {
+      clearInterval(window.questionTimer);
+    }
+  };
+
+  const startQuestionTimer = () => {
+    clearTimer(); // Clear any existing timer
+    
+    window.questionTimer = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearTimer();
+          handleTimeUp();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+  };
+
+  const handleTimeUp = () => {
+    // Mark the question as unanswered if not already answered
+    const currentQuestionId = questions[currentQuestionIndex].id;
+    if (!answeredQuestions.has(currentQuestionId)) {
+      setAnsweredQuestions(prev => new Set(prev).add(currentQuestionId));
+      saveProgress();
+    }
+    
+    // Move to next question or submit if last question
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      handleSubmit();
+    }
+  };
 
   const saveProgress = () => {
     localStorage.setItem(`quizProgress_${topicName}`, JSON.stringify({
@@ -76,25 +131,21 @@ const Quiz = () => {
   };
 
   const handleNextQuestion = () => {
+    clearTimer();
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       saveProgress();
     }
   };
 
-  const handlePrevQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      saveProgress();
-    }
-  };
-
   const handleSubmit = () => {
+    clearTimer();
     const endTime = new Date();
     const timeDiff = (endTime - startTime) / 1000; // in seconds
     setTimeTaken(timeDiff);
     setShowResult(true);
     setQuizCompleted(true);
+    setTimerActive(false);
     
     // Save quiz results to history
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -164,11 +215,16 @@ const Quiz = () => {
             <span className="text-sm font-medium text-gray-600">
               Question {currentQuestionIndex + 1} of {totalQuestions}
             </span>
-            {showResult && (
-              <span className="text-sm font-medium text-gray-600">
-                Score: {score} / {totalQuestions}
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-gray-600 mr-3">
+                Time left: <span className={`font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-gray-600'}`}>{timeLeft}s</span>
               </span>
-            )}
+              {showResult && (
+                <span className="text-sm font-medium text-gray-600">
+                  Score: {score} / {totalQuestions}
+                </span>
+              )}
+            </div>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
             <div 
@@ -206,19 +262,7 @@ const Quiz = () => {
           </div>
 
           {/* Navigation buttons */}
-          <div className="flex justify-between">
-            <button
-              onClick={handlePrevQuestion}
-              disabled={currentQuestionIndex === 0}
-              className={`px-5 py-2.5 rounded-lg font-medium ${
-                currentQuestionIndex === 0 
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ← Previous
-            </button>
-            
+          <div className="flex justify-end">
             {isLastQuestion ? (
               <button
                 onClick={handleSubmit}
@@ -294,6 +338,9 @@ const Quiz = () => {
                     setQuizCompleted(false);
                     setAnsweredQuestions(new Set());
                     setStartTime(new Date());
+                    setTimeLeft(30);
+                    setTimerActive(true);
+                    startQuestionTimer();
                   }}
                   className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                 >
