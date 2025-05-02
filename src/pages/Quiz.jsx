@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import data from '../data/data.json';
 
@@ -9,23 +9,12 @@ const Quiz = () => {
   const [selectedOptions, setSelectedOptions] = useState({});
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
 
   // Get the questions for the specific topic
   const questions = data.quizzes[topicName] || [];
   const totalQuestions = questions.length;
-
-  useEffect(() => {
-    // Timer countdown
-    if (!quizCompleted && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !quizCompleted) {
-      handleSubmit();
-    }
-  }, [timeLeft, quizCompleted]);
 
   const handleOptionSelect = (questionId, option) => {
     const currentQuestion = questions.find(q => q.id === questionId);
@@ -76,12 +65,6 @@ const Quiz = () => {
     setQuizCompleted(true);
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-
   if (questions.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -109,17 +92,11 @@ const Quiz = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        {/* Header with topic and timer */}
+        {/* Header with topic */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">{topicName} Quiz</h1>
-              <p className="text-blue-100">Test your knowledge on {topicName}</p>
-            </div>
-            <div className="bg-white/20 px-4 py-2 rounded-lg text-lg font-semibold">
-              <span className="mr-1">⏱️</span>
-              {formatTime(timeLeft)}
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold">{topicName} Quiz</h1>
+            <p className="text-blue-100">Test your knowledge on {topicName}</p>
           </div>
         </div>
 
@@ -254,7 +231,6 @@ const Quiz = () => {
                     setScore(0);
                     setShowResult(false);
                     setQuizCompleted(false);
-                    setTimeLeft(600);
                     setAnsweredQuestions(new Set());
                   }}
                   className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
