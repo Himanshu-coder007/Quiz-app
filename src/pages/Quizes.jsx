@@ -25,19 +25,17 @@ const Quizes = () => {
     "Cyber Security": cybersecurityImage
   };
 
-  // Function to handle quiz start using ID
-  const handleStartQuiz = (topicId) => {
-    navigate(`quiz/${topicId}`); // Fixed navigation path
+  // Function to handle quiz start using topic name
+  const handleStartQuiz = (topicName) => {
+    navigate(`/quiz/${topicName}`);
   };
 
-  // Create an array of topics with their IDs
-  const topics = Object.entries(data.quizzes).map(([topic, quizzes], index) => {
+  // Create an array of topics with their names
+  const topics = Object.keys(data.quizzes).map((topicName) => {
     return {
-      name: topic,
-      id: index + 1, // Assign unique IDs 1, 2, 3, etc.
-      count: quizzes.length,
-      image: topicImages[topic],
-      quizzes: quizzes // Store the actual quizzes for this topic
+      name: topicName,
+      count: data.quizzes[topicName].length,
+      image: topicImages[topicName],
     };
   });
 
@@ -49,9 +47,8 @@ const Quizes = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {topics.map((topic) => (
             <div 
-              key={topic.id} 
+              key={topic.name} 
               className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-xl flex flex-col h-full"
-              data-id={topic.id} // Add data-id attribute
             >
               <div className="h-48 w-full overflow-hidden flex items-center justify-center bg-gray-200 p-4">
                 <img 
@@ -69,7 +66,7 @@ const Quizes = () => {
                 <p className="text-gray-600 mb-4">{topic.count} {topic.count === 1 ? 'quiz' : 'quizzes'} available</p>
                 <div className="mt-auto">
                   <button
-                    onClick={() => handleStartQuiz(topic.id)}
+                    onClick={() => handleStartQuiz(topic.name)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 text-center"
                   >
                     Start Quiz

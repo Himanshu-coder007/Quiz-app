@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import data from '../data/data.json';
 
 const Quiz = () => {
-  const { id } = useParams();
-  const [quizData, setQuizData] = useState(null);
+  const { id: topicName } = useParams();
+  const navigate = useNavigate();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [score, setScore] = useState(0);
@@ -12,19 +12,9 @@ const Quiz = () => {
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [quizCompleted, setQuizCompleted] = useState(false);
 
-  useEffect(() => {
-    // Find the quiz topic based on ID
-    const quizTopics = Object.entries(data.quizzes);
-    for (const [topic, questions] of quizTopics) {
-      if (questions.some(q => q.id.toString() === id)) {
-        setQuizData({
-          topic,
-          questions
-        });
-        break;
-      }
-    }
-  }, [id]);
+  // Get the questions for the specific topic
+  const questions = data.quizzes[topicName] || [];
+  const totalQuestions = questions.length;
 
   useEffect(() => {
     // Timer countdown
@@ -44,7 +34,7 @@ const Quiz = () => {
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < quizData.questions.length - 1) {
+    if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -57,7 +47,7 @@ const Quiz = () => {
 
   const handleSubmit = () => {
     let correctAnswers = 0;
-    quizData.questions.forEach(question => {
+    questions.forEach(question => {
       if (selectedOptions[question.id] === question.answer) {
         correctAnswers++;
       }
@@ -73,12 +63,11 @@ const Quiz = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  if (!quizData) {
-    return <div className="flex justify-center items-center h-screen">Loading quiz...</div>;
+  if (questions.length === 0) {
+    return <div className="flex justify-center items-center h-screen">No questions found for this topic.</div>;
   }
 
-  const currentQuestion = quizData.questions[currentQuestionIndex];
-  const totalQuestions = quizData.questions.length;
+  const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
   const percentage = (score / totalQuestions) * 100;
   const passed = percentage >= 70;
@@ -87,7 +76,7 @@ const Quiz = () => {
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{quizData.topic} Quiz</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{topicName} Quiz</h1>
           <div className="text-lg font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded">
             Time Left: {formatTime(timeLeft)}
           </div>
@@ -100,7 +89,7 @@ const Quiz = () => {
             </span>
             <span className="text-sm font-medium text-gray-600">
               Score: {Object.values(selectedOptions).filter((opt, i) => 
-                opt === quizData.questions[i].answer
+                opt === questions[i]?.answer
               ).length} / {totalQuestions}
             </span>
           </div>
@@ -190,10 +179,7 @@ const Quiz = () => {
             </div>
             <div className="flex justify-end">
               <button
-                onClick={() => {
-                  setShowResult(false);
-                  // You could add navigation back to quizzes here if needed
-                }}
+                onClick={() => navigate('/dashboard/quizes')}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Close

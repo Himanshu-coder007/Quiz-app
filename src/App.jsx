@@ -19,8 +19,9 @@ const App = () => {
             <Route index element={<Home />} />
             <Route path="home" element={<Home />} />
             <Route path="quizes" element={<Quizes />} />
-            <Route path="quizes/quiz/:id" element={<Quiz />} /> {/* Updated this line */}
           </Route>
+          {/* Moved Quiz route here - not nested under Dashboard */}
+          <Route path="/quiz/:id" element={<Quiz />} />
         </Route>
         <Route path="/" element={<Login />} />
       </Routes>
