@@ -18,7 +18,9 @@ const Home = () => {
     
     // Filter history for current user if logged in
     const userHistory = user ? history.filter(item => item.username === user.username) : [];
-    setQuizHistory(userHistory);
+    // Sort history by date in descending order (newest first)
+    const sortedHistory = [...userHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+    setQuizHistory(sortedHistory);
 
     // Calculate stats
     if (userHistory.length > 0) {
@@ -78,30 +80,30 @@ const Home = () => {
                 <h2 className="text-xl font-semibold text-gray-800">Your Quiz History</h2>
               </div>
               {quizHistory.length > 0 ? (
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-200 max-h-[450px] overflow-y-auto">
                   {quizHistory.map((quiz, index) => (
-                    <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <div className="mb-4 sm:mb-0">
-                          <h3 className="text-lg font-medium text-gray-900">{quiz.topic}</h3>
-                          <p className="text-sm text-gray-500">Taken on {formatDate(quiz.date)}</p>
+                        <div className="mb-2 sm:mb-0">
+                          <h3 className="text-md font-medium text-gray-900">{quiz.topic}</h3>
+                          <p className="text-xs text-gray-500">Taken on {formatDate(quiz.date)}</p>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-3">
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Score</p>
-                            <p className={`text-lg font-bold ${
+                            <p className="text-xs text-gray-500">Score</p>
+                            <p className={`text-md font-bold ${
                               quiz.percentage >= 70 ? 'text-green-600' : 'text-red-600'
                             }`}>
                               {quiz.score}/{quiz.totalQuestions}
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Time</p>
-                            <p className="text-lg font-bold text-gray-900">{formatTime(quiz.timeTaken)}</p>
+                            <p className="text-xs text-gray-500">Time</p>
+                            <p className="text-md font-bold text-gray-900">{formatTime(quiz.timeTaken)}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Result</p>
-                            <p className={`text-lg font-bold ${
+                            <p className="text-xs text-gray-500">Result</p>
+                            <p className={`text-md font-bold ${
                               quiz.percentage >= 70 ? 'text-green-600' : 'text-red-600'
                             }`}>
                               {quiz.percentage >= 70 ? 'Passed' : 'Failed'}

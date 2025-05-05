@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import data from '../data/data.json';
 
@@ -15,7 +15,21 @@ const Quizes = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  
+  const [customQuizzes, setCustomQuizzes] = useState([]);
+
+  // Load custom quizzes from localStorage on component mount
+  useEffect(() => {
+    const storedQuizzes = JSON.parse(localStorage.getItem('quizzes')) || {};
+    const customQuizTopics = Object.keys(storedQuizzes).map(topicName => ({
+      name: topicName,
+      count: storedQuizzes[topicName].questions.length,
+      image: storedQuizzes[topicName].coverPhoto || 'https://via.placeholder.com/300x200?text=Quiz+Cover',
+      category: 'Others',
+      isCustom: true
+    }));
+    setCustomQuizzes(customQuizTopics);
+  }, []);
+
   // Map topic names to their images
   const topicImages = {
     "React": reactImage,
@@ -27,8 +41,8 @@ const Quizes = () => {
     "Cyber Security": cybersecurityImage
   };
 
-  // Categories for filtering
-  const categories = ['All', 'Programming', 'Computer Science', 'Security'];
+  // Categories for filtering (now includes 'Others')
+  const categories = ['All', 'Programming', 'Computer Science', 'Security', 'Others'];
 
   // Topic to category mapping
   const topicCategories = {
@@ -42,19 +56,23 @@ const Quizes = () => {
   };
 
   // Function to handle quiz start
-  const handleStartQuiz = (topicName) => {
-    navigate(`/quiz/${topicName}`);
+  const handleStartQuiz = (topicName, isCustom = false) => {
+    navigate(`/quiz/${topicName}`, { state: { isCustom } });
   };
 
-  // Create an array of topics with their details
-  const allTopics = Object.keys(data.quizzes).map((topicName) => {
+  // Create an array of predefined topics with their details
+  const predefinedTopics = Object.keys(data.quizzes).map((topicName) => {
     return {
       name: topicName,
       count: data.quizzes[topicName].length,
       image: topicImages[topicName],
-      category: topicCategories[topicName] || 'Other'
+      category: topicCategories[topicName] || 'Other',
+      isCustom: false
     };
   });
+
+  // Combine predefined and custom quizzes
+  const allTopics = [...predefinedTopics, ...customQuizzes];
 
   // Filter topics based on search term and selected category
   const filteredTopics = allTopics.filter(topic => {
@@ -72,7 +90,7 @@ const Quizes = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Explore Our Quizzes</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Test your knowledge and learn something new with our collection of interactive quizzes.
+            Test your knowledge with our collection of interactive quizzes, including admin-created content.
           </p>
         </div>
         
@@ -147,25 +165,27 @@ const Quizes = () => {
                   <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm text-xs font-medium px-2 py-1 rounded-full text-gray-700">
                     {topic.category}
                   </div>
-                  <img 
-                    src={topic.image} 
-                    alt={topic.name} 
-                    className="object-contain h-32 w-32"
-                    onError={(e) => {
-                      e.target.onerror = null; 
-                      e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
-                    }}
-                  />
+                  <div className="h-full w-full flex items-center justify-center">
+                    <img 
+                      src={topic.image} 
+                      alt={topic.name} 
+                      className="object-contain max-h-full max-w-full p-2"
+                      onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = 'https://via.placeholder.com/300x200?text=Quiz+Cover';
+                      }}
+                    />
+                  </div>
                 </div>
                 <div className="p-5 flex flex-col flex-grow">
                   <div className="flex-grow">
                     <h2 className="text-xl font-semibold text-gray-800 mb-2">{topic.name}</h2>
                     <p className="text-gray-600 text-sm mb-4">
-                      {topic.count} {topic.count === 1 ? 'question set' : 'question sets'} available
+                      {topic.count} {topic.count === 1 ? 'question' : 'questions'}
                     </p>
                   </div>
                   <button
-                    onClick={() => handleStartQuiz(topic.name)}
+                    onClick={() => handleStartQuiz(topic.name, topic.isCustom)}
                     className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-300 text-center flex items-center justify-center"
                   >
                     Start Quiz
@@ -190,14 +210,20 @@ const Quizes = () => {
                   <p className="text-2xl font-bold text-blue-600">{allTopics.length}</p>
                 </div>
                 <div className="px-4 py-3 bg-green-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Total Questions</p>
+                  <p className="text-sm font-medium text-gray-500">Predefined Questions</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {allTopics.reduce((sum, topic) => sum + topic.count, 0)}
+                    {predefinedTopics.reduce((sum, topic) => sum + topic.count, 0)}
                   </p>
                 </div>
                 <div className="px-4 py-3 bg-purple-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Showing</p>
+                  <p className="text-sm font-medium text-gray-500">Custom Quizzes</p>
                   <p className="text-2xl font-bold text-purple-600">
+                    {customQuizzes.length}
+                  </p>
+                </div>
+                <div className="px-4 py-3 bg-orange-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">Showing</p>
+                  <p className="text-2xl font-bold text-orange-600">
                     {sortedTopics.length} {sortedTopics.length === 1 ? 'topic' : 'topics'}
                   </p>
                 </div>

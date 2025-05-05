@@ -1,11 +1,11 @@
-// src/pages/Quiz.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import data from '../data/data.json';
 
 const Quiz = () => {
   const { id: topicName } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [score, setScore] = useState(0);
@@ -16,12 +16,24 @@ const Quiz = () => {
   const [timeTaken, setTimeTaken] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [timerActive, setTimerActive] = useState(true);
-
-  // Get the questions for the specific topic
-  const questions = data.quizzes[topicName] || [];
-  const totalQuestions = questions.length;
+  const [questions, setQuestions] = useState([]);
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
   useEffect(() => {
+    // Check if this is a custom quiz from localStorage
+    const isCustom = location.state?.isCustom || false;
+    
+    let quizQuestions = [];
+    if (isCustom) {
+      const storedQuizzes = JSON.parse(localStorage.getItem('quizzes')) || {};
+      quizQuestions = storedQuizzes[topicName]?.questions || [];
+    } else {
+      quizQuestions = data.quizzes[topicName] || [];
+    }
+
+    setQuestions(quizQuestions);
+    setTotalQuestions(quizQuestions.length);
+
     // Set start time when component mounts
     setStartTime(new Date());
     
@@ -41,15 +53,15 @@ const Quiz = () => {
       // Clean up timer when component unmounts
       clearTimer();
     };
-  }, [topicName]);
+  }, [topicName, location.state]);
 
   useEffect(() => {
     // Reset timer when question changes
-    if (timerActive) {
+    if (timerActive && questions.length > 0) {
       setTimeLeft(30);
       startQuestionTimer();
     }
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, questions]);
 
   const clearTimer = () => {
     if (window.questionTimer) {
@@ -73,6 +85,8 @@ const Quiz = () => {
   };
 
   const handleTimeUp = () => {
+    if (questions.length === 0) return;
+    
     // Mark the question as unanswered if not already answered
     const currentQuestionId = questions[currentQuestionIndex].id;
     if (!answeredQuestions.has(currentQuestionId)) {
@@ -99,6 +113,8 @@ const Quiz = () => {
 
   const handleOptionSelect = (questionId, option) => {
     const currentQuestion = questions.find(q => q.id === questionId);
+    if (!currentQuestion) return;
+    
     const wasPreviouslyAnswered = answeredQuestions.has(questionId);
     const previousSelection = selectedOptions[questionId];
     

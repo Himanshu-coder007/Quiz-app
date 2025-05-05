@@ -7,6 +7,8 @@ import AuthWrapper from "./components/AuthWrapper";
 import Home from "./pages/Home";
 import Quizes from "./pages/Quizes";
 import Quiz from "./pages/Quiz";
+import AdminHero from "./pages/admin/AdminHero";
+import CreateQuiz from "./pages/admin/CreateQuiz";
 
 const App = () => {
   return (
@@ -14,11 +16,14 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/admin" element={<AdminHero/>} />
         <Route element={<AuthWrapper />}>
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<Home />} />
             <Route path="home" element={<Home />} />
             <Route path="quizes" element={<Quizes />} />
+            <Route path="admin" element={<AdminHero/>} />
+            <Route path="create-quiz" element={<CreateQuiz/>} />
           </Route>
           {/* Moved Quiz route here - not nested under Dashboard */}
           <Route path="/quiz/:id" element={<Quiz />} />
