@@ -11,12 +11,22 @@ const Login = () => {
     e.preventDefault();
     setError('');
 
+    if (!email || !password) {
+      setError('Please fill all fields');
+      return;
+    }
+
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const user = users.find(u => u.email === email && u.password === password);
 
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
-      navigate('/dashboard');
+      // Redirect based on role
+      if (user.role === 'admin') {
+        navigate('/dashboard/admin');
+      } else {
+        navigate('/dashboard/home');
+      }
     } else {
       setError('Invalid email or password');
     }

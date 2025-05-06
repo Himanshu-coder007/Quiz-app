@@ -5,12 +5,19 @@ const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('user');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
+
+    // Basic validation
+    if (!username || !email || !password) {
+      setError('Please fill all fields');
+      return;
+    }
 
     const users = JSON.parse(localStorage.getItem('users')) || [];
 
@@ -19,10 +26,24 @@ const Signup = () => {
       return;
     }
 
-    const newUser = { username, email, password };
+    const newUser = { 
+      id: Date.now().toString(),
+      username, 
+      email, 
+      password, 
+      role,
+      createdAt: new Date().toISOString()
+    };
+    
     localStorage.setItem('users', JSON.stringify([...users, newUser]));
     localStorage.setItem('currentUser', JSON.stringify(newUser));
-    navigate('/dashboard');
+    
+    // Redirect based on role
+    if (role === 'admin') {
+      navigate('/dashboard/admin');
+    } else {
+      navigate('/dashboard/home');
+    }
   };
 
   return (
@@ -96,10 +117,29 @@ const Signup = () => {
                   type="password"
                   autoComplete="new-password"
                   required
+                  minLength="6"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                Role
+              </label>
+              <div className="mt-1">
+                <select
+                  id="role"
+                  name="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
             </div>
 
