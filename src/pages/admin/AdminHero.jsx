@@ -7,11 +7,18 @@ const AdminHero = () => {
   const [loading, setLoading] = useState(true);
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
+  const [totalQuizzes, setTotalQuizzes] = useState(7); // Default 7 quizzes
 
   useEffect(() => {
     // Load data from localStorage
     const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
     const storedHistory = JSON.parse(localStorage.getItem('quizHistory')) || [];
+    const quizzesCollection = JSON.parse(localStorage.getItem('quizzes')) || {};
+    
+    // Count the quizzes in quizzes collection
+    const quizzesCount = Object.keys(quizzesCollection).length;
+    // Update total quizzes (default 7 + quizzes in collection)
+    setTotalQuizzes(7 + quizzesCount);
     
     // Sort quiz history by date in descending order (newest first)
     const sortedHistory = [...storedHistory].sort((a, b) => 
@@ -45,7 +52,6 @@ const AdminHero = () => {
 
   // Calculate statistics
   const totalUsers = users.length;
-  const totalQuizzes = 7; // Assuming 7 quizzes as per requirement
   const totalAttempts = quizHistory.length;
   const averageScore = quizHistory.length > 0 
     ? (quizHistory.reduce((sum, attempt) => sum + attempt.percentage, 0) / quizHistory.length).toFixed(2)
