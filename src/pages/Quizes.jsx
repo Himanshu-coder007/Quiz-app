@@ -24,7 +24,7 @@ const Quizes = () => {
       name: topicName,
       count: storedQuizzes[topicName].questions.length,
       image: storedQuizzes[topicName].coverPhoto || 'https://via.placeholder.com/300x200?text=Quiz+Cover',
-      category: 'Others',
+      category: storedQuizzes[topicName].category || 'Others',
       isCustom: true
     }));
     setCustomQuizzes(customQuizTopics);
@@ -41,10 +41,10 @@ const Quizes = () => {
     "Cyber Security": cybersecurityImage
   };
 
-  // Categories for filtering (now includes 'Others')
+  // Categories for filtering (now includes all possible categories)
   const categories = ['All', 'Programming', 'Computer Science', 'Security', 'Others'];
 
-  // Topic to category mapping
+  // Topic to category mapping for predefined quizzes
   const topicCategories = {
     "React": "Programming",
     "JavaScript": "Programming",
@@ -66,7 +66,7 @@ const Quizes = () => {
       name: topicName,
       count: data.quizzes[topicName].length,
       image: topicImages[topicName],
-      category: topicCategories[topicName] || 'Other',
+      category: topicCategories[topicName] || 'Others',
       isCustom: false
     };
   });

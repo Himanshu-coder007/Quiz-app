@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { FiPlus, FiTrash2, FiSave, FiImage } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiSave, FiImage, FiChevronDown } from 'react-icons/fi';
 
 const CreateQuiz = () => {
   const [quizTopic, setQuizTopic] = useState('');
   const [quizCoverPhoto, setQuizCoverPhoto] = useState('');
+  const [quizCategory, setQuizCategory] = useState('Others');
   const [questions, setQuestions] = useState([
     {
       id: 1,
@@ -12,6 +13,8 @@ const CreateQuiz = () => {
       answer: ''
     }
   ]);
+
+  const categories = ['Programming', 'Computer Science', 'Security', 'Others'];
 
   const handleAddQuestion = () => {
     const newId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
@@ -86,10 +89,11 @@ const CreateQuiz = () => {
     // Get existing quizzes from localStorage
     const existingQuizzes = JSON.parse(localStorage.getItem('quizzes')) || {};
     
-    // Create new quiz object with cover photo
+    // Create new quiz object with cover photo and category
     const newQuiz = {
       [quizTopic]: {
         coverPhoto: quizCoverPhoto,
+        category: quizCategory,
         questions: questions.map(q => ({
           id: q.id,
           question: q.question,
@@ -108,6 +112,7 @@ const CreateQuiz = () => {
     alert('Quiz saved successfully!');
     setQuizTopic('');
     setQuizCoverPhoto('');
+    setQuizCategory('Others');
     setQuestions([{
       id: 1,
       question: '',
@@ -133,6 +138,27 @@ const CreateQuiz = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="e.g., React, JavaScript, etc."
           />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="quizCategory" className="block text-sm font-medium text-gray-700 mb-2">
+            Quiz Category
+          </label>
+          <div className="relative">
+            <select
+              id="quizCategory"
+              value={quizCategory}
+              onChange={(e) => setQuizCategory(e.target.value)}
+              className="appearance-none w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <FiChevronDown className="h-5 w-5 text-gray-400" />
+            </div>
+          </div>
         </div>
 
         <div className="mb-6">
