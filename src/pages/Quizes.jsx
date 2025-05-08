@@ -17,6 +17,16 @@ const Quizes = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [customQuizzes, setCustomQuizzes] = useState([]);
 
+  // Theme colors
+  const themeColors = {
+    primary: '#006FF4',
+    secondary: '#EA0001',
+    accent1: '#FDBE08',
+    accent2: '#8BD30D',
+    dark: '#1F2937',
+    light: '#F9FAFB'
+  };
+
   // Load custom quizzes from localStorage on component mount
   useEffect(() => {
     const storedQuizzes = JSON.parse(localStorage.getItem('quizzes')) || {};
@@ -84,11 +94,25 @@ const Quizes = () => {
   // Sort topics alphabetically
   const sortedTopics = [...filteredTopics].sort((a, b) => a.name.localeCompare(b.name));
 
+  // Get category color
+  const getCategoryColor = (category) => {
+    switch(category) {
+      case 'Programming': return themeColors.primary;
+      case 'Computer Science': return themeColors.accent2;
+      case 'Security': return themeColors.secondary;
+      case 'Others': return themeColors.accent1;
+      default: return themeColors.dark;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Explore Our Quizzes</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Explore <span style={{ color: themeColors.primary }}>Our</span>{' '}
+            <span style={{ color: themeColors.secondary }}>Quizzes</span>
+          </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Test your knowledge with our collection of interactive quizzes, including admin-created content.
           </p>
@@ -109,6 +133,7 @@ const Quizes = () => {
               className="block w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ borderColor: themeColors.primary }}
             />
           </div>
           
@@ -118,11 +143,15 @@ const Quizes = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   selectedCategory === category
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'text-white shadow-md'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }`}
+                style={{
+                  backgroundColor: selectedCategory === category ? getCategoryColor(category) : '',
+                  borderColor: selectedCategory === category ? getCategoryColor(category) : ''
+                }}
               >
                 {category}
               </button>
@@ -132,7 +161,7 @@ const Quizes = () => {
 
         {/* Results Section */}
         {sortedTopics.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm max-w-2xl mx-auto">
+          <div className="text-center py-16 bg-white rounded-xl shadow-sm max-w-2xl mx-auto border" style={{ borderColor: themeColors.accent1 }}>
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -148,7 +177,12 @@ const Quizes = () => {
                   setSearchTerm('');
                   setSelectedCategory('All');
                 }}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300"
+                style={{ 
+                  backgroundColor: themeColors.primary,
+                  '&:hover': { backgroundColor: '#0059C7' },
+                  focusRingColor: themeColors.primary
+                }}
               >
                 Clear filters
               </button>
@@ -159,10 +193,17 @@ const Quizes = () => {
             {sortedTopics.map((topic) => (
               <div 
                 key={topic.name} 
-                className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full border border-gray-100"
+                className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full border border-gray-200"
+                style={{ 
+                  borderTopColor: getCategoryColor(topic.category),
+                  borderTopWidth: '4px'
+                }}
               >
-                <div className="h-48 w-full overflow-hidden relative bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center p-4">
-                  <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm text-xs font-medium px-2 py-1 rounded-full text-gray-700">
+                <div className="h-48 w-full overflow-hidden relative flex items-center justify-center p-4">
+                  <div 
+                    className="absolute top-3 right-3 text-xs font-medium px-2 py-1 rounded-full text-white"
+                    style={{ backgroundColor: getCategoryColor(topic.category) }}
+                  >
                     {topic.category}
                   </div>
                   <div className="h-full w-full flex items-center justify-center">
@@ -186,7 +227,11 @@ const Quizes = () => {
                   </div>
                   <button
                     onClick={() => handleStartQuiz(topic.name, topic.isCustom)}
-                    className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-300 text-center flex items-center justify-center"
+                    className="w-full mt-4 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-300 text-center flex items-center justify-center hover:shadow-md"
+                    style={{ 
+                      backgroundColor: themeColors.primary,
+                      '&:hover': { backgroundColor: '#0059C7' }
+                    }}
                   >
                     Start Quiz
                     <svg className="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -201,29 +246,29 @@ const Quizes = () => {
 
         {/* Stats Section */}
         {sortedTopics.length > 0 && (
-          <div className="mt-12 bg-white rounded-xl shadow-sm p-6 max-w-4xl mx-auto">
+          <div className="mt-12 bg-white rounded-xl shadow-sm p-6 max-w-4xl mx-auto border" style={{ borderColor: themeColors.accent2 }}>
             <div className="text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Quiz Collection Stats</h3>
               <div className="flex flex-wrap justify-center gap-6">
-                <div className="px-4 py-3 bg-blue-50 rounded-lg">
+                <div className="px-4 py-3 rounded-lg border" style={{ borderColor: themeColors.primary }}>
                   <p className="text-sm font-medium text-gray-500">Total Topics</p>
-                  <p className="text-2xl font-bold text-blue-600">{allTopics.length}</p>
+                  <p className="text-2xl font-bold" style={{ color: themeColors.primary }}>{allTopics.length}</p>
                 </div>
-                <div className="px-4 py-3 bg-green-50 rounded-lg">
+                <div className="px-4 py-3 rounded-lg border" style={{ borderColor: themeColors.accent2 }}>
                   <p className="text-sm font-medium text-gray-500">Predefined Questions</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold" style={{ color: themeColors.accent2 }}>
                     {predefinedTopics.reduce((sum, topic) => sum + topic.count, 0)}
                   </p>
                 </div>
-                <div className="px-4 py-3 bg-purple-50 rounded-lg">
+                <div className="px-4 py-3 rounded-lg border" style={{ borderColor: themeColors.secondary }}>
                   <p className="text-sm font-medium text-gray-500">Custom Quizzes</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold" style={{ color: themeColors.secondary }}>
                     {customQuizzes.length}
                   </p>
                 </div>
-                <div className="px-4 py-3 bg-orange-50 rounded-lg">
+                <div className="px-4 py-3 rounded-lg border" style={{ borderColor: themeColors.accent1 }}>
                   <p className="text-sm font-medium text-gray-500">Showing</p>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-2xl font-bold" style={{ color: themeColors.accent1 }}>
                     {sortedTopics.length} {sortedTopics.length === 1 ? 'topic' : 'topics'}
                   </p>
                 </div>
