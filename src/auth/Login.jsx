@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
@@ -6,6 +6,41 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Initialize default users if they don't exist
+  useEffect(() => {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    // Check if default admin exists
+    const adminExists = users.some(user => user.email === 'admin@example.com');
+    if (!adminExists) {
+      const defaultAdmin = {
+        id: '1',
+        username: 'admin',
+        email: 'admin@example.com',
+        password: 'admin123',
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      };
+      users.push(defaultAdmin);
+    }
+
+    // Check if default user exists
+    const userExists = users.some(user => user.email === 'user@example.com');
+    if (!userExists) {
+      const defaultUser = {
+        id: '2',
+        username: 'user',
+        email: 'user@example.com',
+        password: 'user123',
+        role: 'user',
+        createdAt: new Date().toISOString()
+      };
+      users.push(defaultUser);
+    }
+
+    localStorage.setItem('users', JSON.stringify(users));
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -36,6 +71,11 @@ const Login = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+        <div className="mt-2 text-center text-sm text-gray-600">
+          <p>Demo credentials:</p>
+          <p>Admin: admin@example.com / admin123</p>
+          <p>User: user@example.com / user123</p>
+        </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
